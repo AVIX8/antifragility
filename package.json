@@ -1,0 +1,29 @@
+{
+  "name": "antifragility",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "icon": "icon.png",
+  "scripts": {
+    "server": "nodemon ./server.js",
+    "app": "electron ./app.js",
+    "build": "electron-builder"
+  },
+  "build": {
+    "appId": "your.id",
+    "mac": {
+      "category": "your.app.category.type"
+    }
+  },
+  "author": "avix256@gmail.com",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^13.1.2",
+    "electron-builder": "^22.11.7"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "morgan": "^1.10.0",
+    "nodemon": "^2.0.7"
+  }
+}

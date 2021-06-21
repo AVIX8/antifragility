@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" href="static/icon.png" type="image/icon type" />
+        <link rel="stylesheet" href="static/styles.css" />
+        <link rel="stylesheet" href="static/spectre.min.css" />
+        <title>Антихрупкость</title>
+    </head>
+
+    <body>
+        <div id="lmenu">
+            <ul class="menu">
+                
+                <li class="divider" data-content="Управление">
+                </li>
+                
+                <div class="form-group">
+                    <label class="form-label">Камера</label>
+                    <label class="form-radio" id="freeCam">
+                      <input type="radio" name="Камера" checked>
+                      <i class="form-icon"></i> Свободная
+                    </label>
+                    <label class="form-radio">
+                      <input type="radio" name="Камера" id="followY">
+                      <i class="form-icon"></i> Следовать за травоядным
+                    </label>
+                    <label class="form-radio">
+                        <input type="radio" name="Камера" id="followR">
+                        <i class="form-icon"></i> Следовать за плотоядным
+                      </label>
+                  </div>
+              </ul>
+            
+            <!-- <button id="freeCam">Свободная камера</button>
+            <button id="followY">Следовать за Желтым</button>
+            <button id="followR">Следовать за Красным</button> -->
+            
+            <div style="flex-direction: row;">
+                <button id="toggle"></button>
+                <button id="reset"></button>
+            </div>
+        </div>
+
+        <div id="rmenu">
+
+        </div>
+
+        <script type="module" src="src/main.js"></script>
+    </body>
+</html>
