@@ -11,41 +11,73 @@
     <body>
         <div id="lmenu">
             <ul class="menu">
-                
-                <li class="divider" data-content="Управление">
-                </li>
-                
+
+                <h5>Камера</h5>
                 <div class="form-group">
-                    <label class="form-label">Камера</label>
                     <label class="form-radio" id="freeCam">
-                      <input type="radio" name="Камера" checked>
-                      <i class="form-icon"></i> Свободная
+                        <input type="radio" name="Камера" checked />
+                        <i class="form-icon"></i> Свободная
                     </label>
                     <label class="form-radio">
-                      <input type="radio" name="Камера" id="followY">
-                      <i class="form-icon"></i> Следовать за травоядным
+                        <input type="radio" name="Камера" id="followY" />
+                        <i class="form-icon"></i> Консумент 1-го порядка
                     </label>
                     <label class="form-radio">
-                        <input type="radio" name="Камера" id="followR">
-                        <i class="form-icon"></i> Следовать за плотоядным
-                      </label>
-                  </div>
-              </ul>
-            
-            <!-- <button id="freeCam">Свободная камера</button>
-            <button id="followY">Следовать за Желтым</button>
-            <button id="followR">Следовать за Красным</button> -->
-            
-            <div style="flex-direction: row;">
-                <button id="toggle"></button>
-                <button id="reset"></button>
-            </div>
+                        <input type="radio" name="Камера" id="followR" />
+                        <i class="form-icon"></i>  Консумент 2-го порядка
+                    </label>
+                </div>
+
+                <div class="divider"></div>
+                <h5>Состояние</h5>
+                <div class="sb tooltip tooltip-right" data-tooltip="количество тиков в секунду">
+                    <span class="form-label" >TPS</span>
+                    <span class="form-label" id="tps">0</span>
+                </div>
+                
+                <div class="sb">
+                    <button class="btn btn-error" style="color: white" id="reset">Сбросить</button>
+                    <button class="btn btn-primary" style="color: white" id="toggle">Приостановить</button>
+                </div>
+
+                <div class="divider"></div>
+                <h5>Настройки</h5>
+                <div class="sb tooltip tooltip-right" data-tooltip="может повысить TPS (при необходимости)">
+                    <span class="form-label">Визуализация</span>
+                    <label class="form-switch">
+                        <input type="checkbox" id="show" checked />
+                        <i class="form-icon"></i> 
+                    </label>
+                </div>
+                <div class="sb tooltip tooltip-right" data-tooltip="количество новых продуцентов за тик">
+                    <span class="form-label">PPT</span>
+                    <input class="form-input" type="number" id="producersPerTick" min="1" value="1">
+                </div>
+                <div class="sb tooltip tooltip-right" data-tooltip="задержка между тиками в мс">
+                    <span class="form-label">Задержка</span>
+                    <input class="form-input" type="number" id="tickDelay" min="0" value="0">
+                </div>
+                
+
+                <div class="divider"></div>
+                <h5>Энергия</h5>
+                <div class="sb">
+                    <span class="form-label">Консументы</span>
+                    <span class="form-label" id="energy">0</span>
+                </div>
+                <div class="sb">
+                    <span class="form-label">Продуценты</span>
+                    <span class="form-label" id="food">0</span>
+                </div>
+                
+                <div class="divider"></div>
+                <h5>Распределение консументов</h5>
+                <div id="distribution">
+
+                </div>
+            </ul>
         </div>
 
-        <div id="rmenu">
-
-        </div>
-
-        <script type="module" src="src/main.js"></script>
+        <script type="module" src="./src/main.js"></script>
     </body>
 </html>

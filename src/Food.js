@@ -2,11 +2,12 @@ import * as THREE from './three.js'
 
 export default class Food {
     constructor(world, x, y) {
+        this.isAlive = true
         this.world = world
         this.x = x
         this.y = y
         this.size = this.random(50,100)
-        this.energy = Math.pow(this.size, 2) / 4
+        this.energy = Math.pow(this.size, 2)
 
         this.geometry = new THREE.BufferGeometry()
         this.geometry.setAttribute('position', new THREE.Float32BufferAttribute([0,0,0], 3))
@@ -19,13 +20,11 @@ export default class Food {
         world.scene.add(this.sceneObject)
     }
 
-    remove(foodIndex) {
+    die() {
+        this.isAlive = false
         this.world.scene.remove( this.sceneObject );
-        
         this.geometry.dispose()
         this.material.dispose()
-
-        this.world.removeFood( foodIndex );
     }
 
     random(min, max) {
