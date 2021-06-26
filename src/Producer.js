@@ -1,6 +1,6 @@
 import * as THREE from './three.js'
 
-export default class Food {
+export default class Producer {
     constructor(world, x, y) {
         this.isAlive = true
         this.world = world

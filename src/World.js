@@ -1,9 +1,11 @@
-import * as THREE from './three.js'
-import Food from './Food.js'
-import Entity from './Entity.js'
+import Producer from './Producer.js'
+import Consumer from './Consumer.js'
 
 export default class World {
+    #tickDelay
+
     constructor(scene, camera, spaceHeight, spaceWidth) {
+        
         this.scene = scene
         this.camera = camera
         this.width = spaceWidth
@@ -11,22 +13,31 @@ export default class World {
         this.ticks = 0
 
         this.isRunning = false
-        this.tickDelay = 0
+        this.#tickDelay = 4
         this.intervalId = null
 
-        this.foodPerTick = 1
+        this.producersPerTick = 1
 
-        this.food = []
-        this.entities = []
+        this.producers = []
+        this.consumers = []
+        this.createEntities()
+    }
 
-        for (let i = 0; i < 1000; i++) {
+    set tickDelay(val) {
+        this.stop()
+        this.#tickDelay = val
+        this.start()
+    }
+
+    createEntities(num = 100) {
+        for (let i = 0; i < num; i++) {
             let r = (Math.random() * this.height) / 2
             let a = Math.random() * Math.PI * 2
             let x = Math.cos(a) * r
             let y = Math.sin(a) * r
-            let entity = new Entity(this, x, y)
-            this.entities.push(entity)
-            this.addRandomFood()
+            let consumer = new Consumer(this, x, y)
+            this.consumers.push(consumer)
+            this.addRandomProducer()
         }
     }
 
@@ -34,7 +45,7 @@ export default class World {
         this.isRunning = true
         this.intervalId = setInterval(() => {
             this.tick()
-        }, this.tickDelay)
+        }, this.#tickDelay)
     }
 
     stop() {
@@ -42,65 +53,50 @@ export default class World {
         clearInterval(this.intervalId)
     }
 
-    clear() {
+    reset() {
         this.stop()
-
-        while (this.entities.length) {
-            this.entities.pop().die()
-        }
-
-        while (this.food.length) {
-            this.food.pop().die()
-        }
+        while (this.consumers.length) this.consumers.pop().die()
+        while (this.producers.length) this.producers.pop().die()
+        this.createEntities()
     }
 
-    generateFood() {
-        for (let i = 0; i < this.foodPerTick && this.food.length < 1000; i++) {
-            this.addRandomFood()
-        }
-    }
-
-    addRandomFood() {
-        let r = (Math.random() * this.height) / 2
+    addRandomProducer() {
+        let r = (((Math.random() + 0.05) / 1.05) * this.height) / 2
         let a = Math.random() * Math.PI * 2
         let x = Math.cos(a) * r
         let y = Math.sin(a) * r
-        let newFood = new Food(this, x, y)
-        this.food.push(newFood)
+        let newProducer = new Producer(this, x, y)
+        this.producers.push(newProducer)
     }
 
-    removeFood(index) {
-        this.food.splice(index, 1)
+    removeProducer(index) {
+        this.producers.splice(index, 1)
     }
 
-    addEntity(entity) {
-        this.entities.push(entity)
+    addConsumer(consumer) {
+        this.consumers.push(consumer)
     }
 
-    removeEntity(index) {
-        this.entities.splice(index, 1)
-    }
-
-    static dist(obj1, obj2) {
-        return Math.sqrt(Math.pow(obj1.x - obj2.x, 2) + Math.pow(obj1.y - obj2.y, 2))
+    removeConsumer(index) {
+        this.consumers.splice(index, 1)
     }
 
     tick() {
         this.ticks += 1
-        
-        this.generateFood()
 
-        let entityDel = []
-        this.entities.forEach((entity, index) => {
-            if (entity.isAlive) entity.do()
-            if (!entity.isAlive) entityDel.push(index)
+        let consumersDel = []
+        this.consumers.forEach((consumer, index) => {
+            if (consumer.isAlive) consumer.do()
+            if (!consumer.isAlive) consumersDel.push(index)
         })
-        for (let i = 0; i < entityDel.length; i++) this.removeEntity(entityDel[i] - i)
+        for (let i = 0; i < consumersDel.length; i++) this.removeConsumer(consumersDel[i] - i)
 
-        let foodDel = []
-        this.food.forEach((food, index) => {
-            if (!food.isAlive) foodDel.push(index)
+        let producersDel = []
+        this.producers.forEach((producer, index) => {
+            if (!producer.isAlive) producersDel.push(index)
         })
-        for (let i = 0; i < foodDel.length; i++) this.removeFood(foodDel[i] - i)
+        for (let i = 0; i < producersDel.length; i++) this.removeProducer(producersDel[i] - i)
+
+        for (let i = 0; i < this.producersPerTick && this.producers.length < 2000; i++) this.addRandomProducer()
     }
 }

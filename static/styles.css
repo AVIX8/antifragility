@@ -2,6 +2,13 @@
   margin: 0;
 }
 
+.distribution-bar {
+  text-align: left;
+  padding: 0px 5px;
+  min-width: fit-content;
+}
+
+
 .form-input {
   width: 100px !important;
 }

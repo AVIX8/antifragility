@@ -1,33 +1,24 @@
 import Genom from './Genom.js'
 import * as THREE from './three.js'
 
-function componentToHex(c) {
-    var hex = c.toString(16)
-    return hex.length == 1 ? '0' + hex : hex
-}
-
-function rgbToHex(r, g, b) {
-    return '#' + componentToHex(r) + componentToHex(g) + componentToHex(b)
-}
-
-export default class Entity {
-    constructor(world, x, y, generation, genom, energy) {
+export default class Consumer {
+    constructor(world, x, y, species, genom, energy) {
         this.world = world
         this.x = x
         this.y = y
-        this.generation = generation ?? 0
+        this.species = species ?? 0
         this.genom = genom ?? new Genom()
         this.isAlive = true
         this.sleep = 100
-
+        
         this.setAttribute(this.genom)
-
-        this.energyToSplit =  Math.pow(this.size, 2)
+        
+        this.energyToSplit = Math.pow(this.size, 2)
         this.energy = energy ? Math.min(energy, this.energyToSplit) : this.energyToSplit
 
         this.movingСost = Math.pow(this.speed, 3) * Math.pow(this.size, 2) / 15000000
 
-        let color = rgbToHex(255, Math.floor(255 - this.omnivorous * 255), 0)
+        let color = `rgb(255, ${Math.floor(255 - this.omnivorous * 255)}, 0)`
 
         this.geometry = new THREE.BufferGeometry()
         this.geometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0], 3))
@@ -73,41 +64,41 @@ export default class Entity {
         this.world.scene.add(line)
     }
 
-    findNearestFood() {
-        let resFood
-        let nearestFoodDist = Number.POSITIVE_INFINITY
+    findNearestProducer() {
+        let resProducer
+        let nearestProducerDist = Number.POSITIVE_INFINITY
 
-        this.world.food.forEach((food) => {
-            if (food.isAlive) {
-                let dist = this.dist(food)
-                if (food.size < this.size && nearestFoodDist > dist) {
-                    nearestFoodDist = dist
-                    resFood = food
+        this.world.producers.forEach((producer) => {
+            if (producer.isAlive) {
+                let dist = this.dist(producer)
+                if (producer.size < this.size && nearestProducerDist > dist) {
+                    nearestProducerDist = dist
+                    resProducer = producer
                 }
             }
         })
-        return resFood
+        return resProducer
     }
 
-    findNearestEntity() {
-        let resEntity
-        let nearestEntityDist = Number.POSITIVE_INFINITY
+    findNearestConsumer() {
+        let resConsumer
+        let nearestConsumerDist = Number.POSITIVE_INFINITY
 
-        this.world.entities.forEach((entity) => {
-            if (entity.isAlive) {
+        this.world.consumers.forEach((consumer) => {
+            if (consumer.isAlive) {
 
-                let dist = this.dist(entity)
+                let dist = this.dist(consumer)
                 if (
-                    entity.size < this.size &&
-                    Math.abs(entity.generation - this.generation) > 1.5 &&
-                    nearestEntityDist > dist
+                    consumer.size < this.size &&
+                    Math.abs(consumer.species - this.species) > 1.5 &&
+                    nearestConsumerDist > dist
                     ) {
-                        nearestEntityDist = dist
-                        resEntity = entity
+                        nearestConsumerDist = dist
+                        resConsumer = consumer
                     }
             }
         })
-        return resEntity
+        return resConsumer
     }
 
     die() {
@@ -120,44 +111,40 @@ export default class Entity {
 
     split() {
         this.energy /= 2
-        let newEntity = new Entity(
+        let newConsumer = new Consumer(
             this.world,
             this.x,
             this.y,
-            this.generation + Math.random(),
+            this.species + this.mutationChance,
             this.genom.getMutated(),
             this.energy
         )
-        this.world.addEntity(newEntity)
+        this.world.addConsumer(newConsumer)
     }
 
-    eatFood(food) {
-        if (this.size > food.size) {
-            this.energy += food.energy * (1 - this.omnivorous) / 4
-            food.die()
+    eatProducer(producer) {
+        if (this.size > producer.size) {
+            this.energy += producer.energy * (1 - this.omnivorous) / 4
+            producer.die()
             this.sleep += 25
         }
     }
 
-    eatEntity(entity) {
-        if (entity.isAlive) {
-            this.energy += entity.energy * this.omnivorous
-            entity.die()
+    eatConsumer(consumer) {
+        if (consumer.isAlive) {
+            this.energy += consumer.energy * this.omnivorous
+            consumer.die()
         }
         this.sleep += 300
     }
 
-    getDecision(entity, food) {
-        if (!food) return true
-        let input = [this.omnivorous, this.dist(entity), entity.speed, entity.energy, entity.sleep, this.dist(food)].map(x => {return 1 / (1 + Math.exp(-x))})
-
+    getDecision(consumer, producer) {
+        if (!producer) return true
+        let input = [this.omnivorous, this.dist(producer), this.dist(consumer), consumer.speed, consumer.energy, consumer.sleep].map(x => {return 1 / (1 + Math.exp(-x))})
+        
         let res = 0
-        for (let i = 0; i < input.length; i++) {
-            let sum = 0;
-            for (let j = 0; j < input.length; j++) {
-                sum+=this.weights[i*input.length+j]*input[i]
-            }
-            res += sum
+        for (let i = 0; i < input.length*input.length; i++) {
+            res += input[i%input.length]*this.weights[i]
         }
         return res>0
     }
@@ -193,21 +180,21 @@ export default class Entity {
             this.sleep--
             return
         }
-        if (this.energy > this.energyToSplit && this.world.entities.length < 2000) {
+        if (this.energy > this.energyToSplit && this.world.consumers.length < 2000) {
             this.split()
         } else {
-            let entity = this.findNearestEntity()
-            let food = this.findNearestFood()
+            let consumer = this.findNearestConsumer()
+            let producer = this.findNearestProducer()
 
             this.clearLine()
-            if (entity && this.getDecision(entity, food)) {
-                this.drawLine(entity)
+            if (consumer && this.getDecision(consumer, producer)) {
+                this.drawLine(consumer)
 
-                this.moveTo(entity)
-                if (this.dist(entity) == 0) this.eatEntity(entity)
-            } else if (food) {
-                if (this.dist(food) == 0) this.eatFood(food)
-                this.moveTo(food)
+                this.moveTo(consumer)
+                if (this.dist(consumer) == 0) this.eatConsumer(consumer)
+            } else if (producer) {
+                if (this.dist(producer) == 0) this.eatProducer(producer)
+                this.moveTo(producer)
             }
         }
         this.energy -= 1
