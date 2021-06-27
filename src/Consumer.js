@@ -1,39 +1,31 @@
 import Genom from './Genom.js'
+import Square from './Square.js'
 import * as THREE from './three.js'
 
-export default class Consumer {
-    constructor(world, x, y, species, genom, energy) {
+export default class Consumer extends Square {
+    constructor(world, x, y, genom, energy) {
+        super(world.scene, x, y)
         this.world = world
-        this.x = x
-        this.y = y
-        this.species = species ?? 0
-        this.genom = genom ?? new Genom()
-        this.isAlive = true
+
+        this.genom = genom ?? new Genom({}, 36)
+
         this.sleep = 100
-        
-        this.setAttribute(this.genom)
-        
+        this.isAlive = true
+
+        this.setProperties(this.genom)
+
         this.energyToSplit = Math.pow(this.size, 2)
         this.energy = energy ? Math.min(energy, this.energyToSplit) : this.energyToSplit
 
-        this.movingСost = Math.pow(this.speed, 3) * Math.pow(this.size, 2) / 15000000
+        this.movingСost = (Math.pow(this.speed, 3) * Math.pow(this.size, 2)) / 15000000
 
-        let color = `rgb(255, ${Math.floor(255 - this.omnivorous * 255)}, 0)`
-
-        this.geometry = new THREE.BufferGeometry()
-        this.geometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0], 3))
-        this.material = new THREE.PointsMaterial({ size: this.genom.size, color })
-        this.sceneObject = new THREE.Points(this.geometry, this.material)
-
-        this.sceneObject.position.x = x
-        this.sceneObject.position.y = y
+        this.color = `rgb(255, ${Math.floor(255 - this.omnivorous * 255)}, 0)`
+        this.startDrawing()
 
         this.line
-
-        world.scene.add(this.sceneObject)
     }
 
-    setAttribute(obj) {
+    setProperties(obj) {
         for (const [key, value] of Object.entries(obj)) {
             this[key] = value
         }
@@ -51,12 +43,11 @@ export default class Consumer {
     drawLine(obj) {
         const material = new THREE.LineBasicMaterial({
             color: 0xffffff,
-            linewidth: 50,
         })
-        const points = []
-        points.push(new THREE.Vector3(this.x, this.y, 0))
-        points.push(new THREE.Vector3(obj.x, obj.y, 0))
-        const geometry = new THREE.BufferGeometry().setFromPoints(points)
+        const geometry = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(this.x, this.y, 0),
+            new THREE.Vector3(obj.x, obj.y, 0),
+        ])
         const line = new THREE.Line(geometry, material)
         line.g = geometry
         line.m = material
@@ -71,7 +62,7 @@ export default class Consumer {
         this.world.producers.forEach((producer) => {
             if (producer.isAlive) {
                 let dist = this.dist(producer)
-                if (producer.size < this.size && nearestProducerDist > dist) {
+                if (nearestProducerDist > dist && producer.size < this.size) {
                     nearestProducerDist = dist
                     resProducer = producer
                 }
@@ -86,16 +77,15 @@ export default class Consumer {
 
         this.world.consumers.forEach((consumer) => {
             if (consumer.isAlive) {
-
                 let dist = this.dist(consumer)
                 if (
+                    nearestConsumerDist > dist &&
                     consumer.size < this.size &&
-                    Math.abs(consumer.species - this.species) > 1.5 &&
-                    nearestConsumerDist > dist
-                    ) {
-                        nearestConsumerDist = dist
-                        resConsumer = consumer
-                    }
+                    Math.abs(consumer.species - this.species) > 1.5
+                ) {
+                    nearestConsumerDist = dist
+                    resConsumer = consumer
+                }
             }
         })
         return resConsumer
@@ -103,28 +93,19 @@ export default class Consumer {
 
     die() {
         this.isAlive = false
-        this.world.scene.remove(this.sceneObject)
-        this.geometry.dispose()
-        this.material.dispose()
+        this.stopDrawing()
         this.clearLine()
     }
 
     split() {
         this.energy /= 2
-        let newConsumer = new Consumer(
-            this.world,
-            this.x,
-            this.y,
-            this.species + this.mutationChance,
-            this.genom.getMutated(),
-            this.energy
-        )
+        let newConsumer = new Consumer(this.world, this.x, this.y, this.genom.getMutated(), this.energy)
         this.world.addConsumer(newConsumer)
     }
 
     eatProducer(producer) {
         if (this.size > producer.size) {
-            this.energy += producer.energy * (1 - this.omnivorous) / 4
+            this.energy += (producer.energy * (1 - this.omnivorous)) / 4
             producer.die()
             this.sleep += 25
         }
@@ -140,33 +121,34 @@ export default class Consumer {
 
     getDecision(consumer, producer) {
         if (!producer) return true
-        let input = [this.omnivorous, this.dist(producer), this.dist(consumer), consumer.speed, consumer.energy, consumer.sleep].map(x => {return 1 / (1 + Math.exp(-x))})
-        
+        let input = [
+            this.omnivorous,
+            this.dist(producer),
+            this.dist(consumer),
+            consumer.speed,
+            consumer.energy,
+            consumer.sleep,
+        ].map((x) => {
+            return 1 / (1 + Math.exp(-x))
+        })
+
         let res = 0
-        for (let i = 0; i < input.length*input.length; i++) {
-            res += input[i%input.length]*this.weights[i]
+        for (let i = 0; i < input.length * input.length; i++) {
+            res += input[i % input.length] * this.weights[i]
         }
-        return res>0
+        return res > 0
     }
 
     moveTo(obj) {
         let dist = this.dist(obj)
-
-        if (dist !== 0) {
+        if (dist != 0) {
             let movement = Math.min(this.speed, dist)
             let energyCost = this.movingСost * movement
-
-            let dx = obj.x - this.x
-            let dy = obj.y - this.y
-
+    
             let k = movement / dist
-
-            this.x += dx * k
-            this.y += dy * k
-
-            this.sceneObject.position.x = this.x
-            this.sceneObject.position.y = this.y
-
+            this.x += (obj.x - this.x) * k
+            this.y += (obj.y - this.y) * k
+    
             this.energy -= energyCost
         }
     }

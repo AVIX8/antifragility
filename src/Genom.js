@@ -1,14 +1,15 @@
 export default class Genom {
-    constructor(genom = {}) {
+    constructor(genom = {}, weightsNumber) {
+        this.mutationChance = genom.mutationChance ?? this.random(0.1, 0.9)
+        
+        this.species = genom.species ?? 0
         this.speed = genom.speed ?? this.random(5, 20)
         this.size = genom.size ?? this.random(75, 150)
-        this.mutationChance = genom.mutationChance ?? this.random(0.1, 0.9)
         this.omnivorous = genom.omnivorous ?? this.random(0.05, 0.95) // 0 - травоядное; 1 - плотоядное
+        
         this.weights = []
-
-        this.weightsNumber = 36
         if (genom.weights) this.weights = Array.from(genom.weights)
-        else for (let i = 0; i < this.weightsNumber; i++) this.weights.push(this.random(-1, 0.7))
+        else for (let i = 0; i < weightsNumber; i++) this.weights.push(this.random(-1, 0.7))
     }
 
     getMutated() {
@@ -32,7 +33,7 @@ export default class Genom {
                     Math.abs(newGenom.weights[i]) + 0.1
                 )
         }
-
+        newGenom.species += this.mutationChance
         return newGenom
     }
 

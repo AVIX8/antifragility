@@ -1,33 +1,19 @@
-import * as THREE from './three.js'
+import Square from './Square.js'
 
-export default class Producer {
+export default class Producer extends Square{
     constructor(world, x, y) {
+        super(world.scene, x, y)
+        
         this.isAlive = true
-        this.world = world
-        this.x = x
-        this.y = y
-        this.size = this.random(50,100)
+        this.size = Math.random()*50+50
         this.energy = Math.pow(this.size, 2)
-
-        this.geometry = new THREE.BufferGeometry()
-        this.geometry.setAttribute('position', new THREE.Float32BufferAttribute([0,0,0], 3))
-        this.material = new THREE.PointsMaterial({ size: this.size, color: '#00DD00' })
-        this.sceneObject = new THREE.Points(this.geometry, this.material)
-
-        this.sceneObject.position.x = x
-        this.sceneObject.position.y = y
-
-        world.scene.add(this.sceneObject)
+        
+        this.color = '#00DD00'
+        this.startDrawing()
     }
 
     die() {
         this.isAlive = false
-        this.world.scene.remove( this.sceneObject );
-        this.geometry.dispose()
-        this.material.dispose()
-    }
-
-    random(min, max) {
-        return Math.random() * (max - min) + min
+        this.stopDrawing()
     }
 }
