@@ -18,10 +18,10 @@ export default class Genom {
         let props = ['speed', 'size', 'mutationChance']
         props.forEach((prop) => {
             if (this.mutationChance > Math.random())
-                newGenom[prop] = this.randomNormalDistribution(this[prop], this[prop] / 8)
+                newGenom[prop] = this.randomNormalDistribution(this[prop], this[prop] / 4)
         })
 
-        newGenom.omnivorous = this.randomNormalDistribution(this.omnivorous, Math.min(this.omnivorous, 1-this.omnivorous)/2+0.2)
+        newGenom.omnivorous = this.randomNormalDistribution(this.omnivorous, Math.min(this.omnivorous, 1-this.omnivorous)+0.4)
         if (newGenom.omnivorous < 0) newGenom.omnivorous = 0.05
         else if (newGenom.omnivorous > 1) newGenom.omnivorous = 0.95
 
@@ -30,7 +30,7 @@ export default class Genom {
             if (this.mutationChance > Math.random())
                 newGenom.weights[i] = this.randomNormalDistribution(
                     newGenom.weights[i],
-                    Math.abs(newGenom.weights[i]) + 0.1
+                    Math.abs(newGenom.weights[i]*2) + 0.2
                 )
         }
         newGenom.species += this.mutationChance
@@ -38,7 +38,6 @@ export default class Genom {
     }
 
     randomNormalDistribution(x, deviation) {
-        if (deviation == undefined) deviation = Math.abs(x * 1.5)
         let u = 0,
             v = 0
         while (u === 0) u = Math.random()
@@ -47,7 +46,7 @@ export default class Genom {
 
         num /= 5
         if (num > 1 || num < -1) return this.randomNormalDistribution(x, deviation)
-        return x + num * deviation * 2
+        return x + num * deviation
     }
 
     random(min, max) {
